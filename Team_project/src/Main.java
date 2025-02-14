@@ -9,6 +9,7 @@ public class Main {
 //		Member member = new Member();
 //		Rent rent = new Rent();
 		
+		//a
 		while(true) {
 			System.out.print("작업을 선택해 주세요. [B:도서 관리, M:회원 관리, R:대여 관리, X:프로그램 종료] : ");
 			String admin = s.nextLine();
