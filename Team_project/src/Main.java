@@ -8,9 +8,9 @@ public class Main {
 		Book book= new Book();
 //		Member member = new Member();
 //		Rent rent = new Rent();
-		
+		System.out.println("[시스템 관리]");
 		while(true) {
-			System.out.print("작업을 선택해 주세요. [B:도서 관리, M:회원 관리, R:대여 관리, X:프로그램 종료] : ");
+			System.out.print("작업을 선택해 주세요. [B:도서관리, M:회원관리, R:대여관리, X:프로그램 종료] : ");
 			String admin = s.nextLine();
 			
 			if (admin.equals("x") || admin.equals("X")) break;

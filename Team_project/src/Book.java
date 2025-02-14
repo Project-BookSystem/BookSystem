@@ -1,14 +1,16 @@
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Scanner;
 
 public class Book {
 	
 	Scanner sc = new Scanner(System.in);
-	//a
+	
 	public void control() {
 		System.out.println("[도서 관리]");
 		while (true) {
-			System.out.print("작업선택 [c:도서등록, u:도서정보수정, r:도서목록조회, d:도서삭제, x:종료] : ");
+			System.out.print("작업선택 [c:도서등록, u:도서정보수정, r:도서목록, d:도서삭제, x:종료] : ");
 			String choice = sc.nextLine();
 			
 			if (choice.equals("x") || choice.equals("X")) {
@@ -25,8 +27,17 @@ public class Book {
 				break;
 			case "r","R":
 				System.out.println("> 도서 목록조회");
-				this.read();
-				break;
+				System.out.print("작업 선택 [a:전체도서목록, s:도서검색] : ");
+				String cho = sc.nextLine();
+				if (cho.equals("a")) {
+					this.readAll();
+				} if (cho.equals("s")) {
+//					this.read();
+				} else {
+					System.out.println("> 잘못된 입력입니다.");
+					continue;
+//					break;
+				}
 			case "d","D":
 				System.out.println("> 도서 삭제");
 				this.delete();
@@ -89,12 +100,13 @@ public class Book {
 			
 			if (total_qty < 1) {
 				System.out.println("잘못된 입력입니다. 다시 입력해주십시오.\n");
-				break;
+				continue;
 			}
 
 			DBConnection.setConnection();
-			String sql = "INSERT INTO book(title,author,isbn,publisher,issue_year,total_qty) VALUES(?, ?, ?, ?, ?, ?)";
-			try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
+			try {
+				String sql = "INSERT INTO book(title,author,isbn,publisher,issue_year,total_qty) VALUES(?, ?, ?, ?, ?, ?)";
+				PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
 				pstmt.setString(1, name);
 				pstmt.setString(2, author);
 				pstmt.setString(3, isbn);
@@ -106,12 +118,12 @@ public class Book {
 				if (rowsInserted > 0) {
 					System.out.println("도서 등록이 완료되었습니다.");
 				}
+				pstmt.close();
 				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			DBConnection.disConnnection();
-			
 		}
 		
 	}
@@ -158,12 +170,58 @@ public class Book {
 //		}
 //	}
 	
+	private void readAll() {
+		DBConnection.setConnection();
+		try {
+			Statement st = DBConnection.conn.createStatement();
+			String sql = "SELECT book_id,title,author,isbn,publisher,issue_year,total_qty,qty FROM book";
+
+			ResultSet rs = st.executeQuery(sql);
+			while(rs.next()) {
+				System.out.println(rs.getInt("book_id")+". "+rs.getString("title")+"\t"+rs.getString("author")+"\t"+rs.getString("publisher")
+				+"\t"+rs.getString("issue_year")+"\t"+rs.getString("total_qty")+"\t"+rs.getString("qty"));
+			}
+			System.out.println("");
+			
+			rs.close();
+			st.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		DBConnection.disConnnection();
+	}
+	
 	private void read() {
 		
 	}
 	
 	private void delete() {
-		
+		while (true) {
+			System.out.print("삭제할 도서의 제목을 입력하십시오 : ");
+			String title = sc.nextLine();
+			if (title.isEmpty()) {
+				System.out.println("> 잘못된 입력입니다. 다시 입력하십시오.\n");
+				continue;
+			}
+
+			DBConnection.setConnection();
+			try {
+				String sql = "DELETE FROM book WHERE title=?";
+				PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
+				pstmt.setString(1, title);
+
+				int rowsInserted = pstmt.executeUpdate();
+				if (rowsInserted > 0) {
+					System.out.println("도서 삭제가 완료되었습니다.");
+				}
+				pstmt.close();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			DBConnection.disConnnection();
+		}
 	}
 	
 	
