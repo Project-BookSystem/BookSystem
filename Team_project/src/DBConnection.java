@@ -19,7 +19,6 @@ public class DBConnection {
 //		return conn;
 //	}
 	
-	//ㅁ
 	public static Connection conn = null;
 	
 	public static void setConnection() {
