@@ -3,7 +3,7 @@ import java.util.Scanner;
 public class Main {
 	
 	static Scanner s = new Scanner(System.in);
-	
+	//ㅋ
 	public static void main(String[] args) {
 		Book book= new Book();
 //		Member member = new Member();

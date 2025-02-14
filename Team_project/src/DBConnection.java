@@ -7,7 +7,7 @@ public class DBConnection {
 	private static final String URL = "jdbc:mysql://192.168.0.94:3306/booksystem"; // DB 주소
 	private static final String USER = "Book"; // MySQL 사용자명
 	private static final String PASSWORD = "0212"; // MySQL 비밀번호
-	
+	//ㅁ
 //	public static Connection getConnection() {
 //		Connection conn = null;
 //		try {

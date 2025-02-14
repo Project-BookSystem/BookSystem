@@ -4,7 +4,7 @@ import java.sql.Statement;
 import java.util.Scanner;
 
 public class Book {
-	
+	//ㅁ
 	Scanner sc = new Scanner(System.in);
 	
 	public void control() {
