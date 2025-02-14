@@ -17,10 +17,10 @@ public class Main {
 			
 			switch(admin) {
 			case "b" , "B" :
-				//book.control();
+				book.control();
 				break;
 			case "m" , "M" :
-				//member.control();
+				member.control();
 				break;
 			case "r" , "R" :
 				//rent.control();
@@ -28,6 +28,7 @@ public class Main {
 				System.out.println("잘못된 입력입니다.\n");
 			}
 		}
+		System.out.println("프로그램을 종료합니다.");
 	}
 	
 //	public static boolean isNumber(String str) {
