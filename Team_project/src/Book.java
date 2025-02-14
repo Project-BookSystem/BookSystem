@@ -3,7 +3,6 @@ import java.util.Scanner;
 
 public class Book {
 	
-	//a
 	Scanner sc = new Scanner(System.in);
 	
 	public void control() {

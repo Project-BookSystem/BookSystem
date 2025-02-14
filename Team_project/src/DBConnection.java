@@ -9,9 +9,6 @@ public class DBConnection {
 	private static final String USER = "Book"; // MySQL 사용자명
 	private static final String PASSWORD = "0212"; // MySQL 비밀번호
 
-	
-	//a
-	
 //	public static Connection getConnection() {
 //		Connection conn = null;
 //		try {
