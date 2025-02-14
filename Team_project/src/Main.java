@@ -3,14 +3,14 @@ import java.util.Scanner;
 public class Main {
 	
 	static Scanner s = new Scanner(System.in);
-	//ㅋ
+	
 	public static void main(String[] args) {
 		Book book= new Book();
 //		Member member = new Member();
 //		Rent rent = new Rent();
-		System.out.println("[시스템 관리]");
 		while(true) {
-			System.out.print("작업을 선택해 주세요. [B:도서관리, M:회원관리, R:대여관리, X:프로그램 종료] : ");
+			System.out.println("[시스템 관리]");
+			System.out.print("> 작업을 선택해 주세요. [B:도서관리, M:회원관리, R:대여관리, X:프로그램 종료] : ");
 			String admin = s.nextLine();
 			
 			if (admin.equals("x") || admin.equals("X")) break;
@@ -28,7 +28,7 @@ public class Main {
 				System.out.println("잘못된 입력입니다.\n");
 			}
 		}
-		System.out.println("프로그램을 종료합니다.");
+		System.out.println("\n> 프로그램을 종료합니다.");
 	}
 	
 	public static boolean isNumber(String str) {
