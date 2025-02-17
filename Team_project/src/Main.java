@@ -6,8 +6,9 @@ public class Main {
 	
 	public static void main(String[] args) {
 		Book book= new Book();
-//		Member member = new Member();
-//		Rent rent = new Rent();
+		Member member = new Member();
+		Rent rent = new Rent();
+		
 		while(true) {
 			System.out.println("[시스템 관리]");
 			System.out.print("> 작업을 선택해 주세요. [B:도서관리, M:회원관리, R:대여관리, X:프로그램 종료] : ");

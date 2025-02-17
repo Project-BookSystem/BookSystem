@@ -2,6 +2,7 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class Member {
+	
 	private static Scanner scanner = new Scanner(System.in);
 
 	public void control() {

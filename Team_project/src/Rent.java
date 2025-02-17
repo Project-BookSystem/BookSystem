@@ -58,7 +58,7 @@ public class Rent {
 			}
 		}
 	}
-	public void add() { 																												//insert into qty 수량 추가하기
+	public void add() { 																											
 
 		System.out.println("회원 ID를 입력해 주세요.");
 		String memId = ss.nextLine();
@@ -67,19 +67,24 @@ public class Rent {
 			memId = ss.nextLine();
 			if (memId.equals("")) return; }
 
-		System.out.println("도서 번호를 입력해 주세요."); 																						//like %%로 title 검색해서 목록 보여주기
+		System.out.println("도서 번호를 입력해 주세요."); 															//like %%로 title 검색해서 목록 보여주기
 		int bookId = si.nextInt();
 		if (bookId<0) return;
 
 		while(true) {
-			//SQL 데이터 저장 > insert into 회원 ID, 도서 ID, 대여일, 반납일  
+			//SQL 데이터 저장 > insert into 회원 ID, 도서 ID, 대여일, 반납일
+			
 			DBConnection.setConnection();
-			String sql = "insert into rent(member_id,book_id) values(?, ?)";
+			String sql = "insert into rent(member_id,book_id) values(?, ?))";
 			try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
 				pstmt.setString(1, memId);
 				pstmt.setInt(2, bookId);
-
 				int rowsInserted = pstmt.executeUpdate();
+				
+				Statement st = DBConnection.conn.createStatement();
+				String sql2 = "update book set qty = qty+1 where book_id ="+bookId; 						//where 구문 고민 필요
+				st.executeUpdate(sql2);																		//출력 안 할 것이라 2줄만 썼는데 괜찮은 것인 지 확인 필
+				
 				if (rowsInserted > 0) {
 					System.out.println("대여가 완료되었습니다.");
 				}
@@ -87,7 +92,7 @@ public class Rent {
 				e.printStackTrace();
 			}
 			DBConnection.disConnection();		
-			this.read(memId);
+			this.read(memId);	
 		}
 	}
 
@@ -189,14 +194,14 @@ public class Rent {
 		DBConnection.setConnection();
 		try {
 			Statement st = DBConnection.conn.createStatement();
-			String sql = "select r.rent_id,r.member_id,r.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') AS extension,"
+			String sql = "select r.rent_id,r.member_id,b.book_id,Sb.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') AS extension,"
 					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') AS overdue from rent r,book b "
-					+ "where r.member_id="+memId+"and r.book_id=b.book id and r.returned is null";
+					+ "where r.member_id="+memId+"and r.book_id=b.book_id and r.returned is null"; 
 			ResultSet rs = st.executeQuery(sql);
 			
 			while (rs.next())
 			{
-				System.out.println("대여 번호: "+rs.getInt("rent_id")+"회원 ID : "+rs.getString("member_id")+" 책 제목: "+rs.getString("title")+
+				System.out.println("대여 번호: "+rs.getInt("rent_id")+"회원 ID : "+rs.getString("member_id")+"도서 번호: "+rs.getInt("book_id")+"도서 제목: "+rs.getString("title")+
 						"대여일: "+rs.getInt("rent")+"반납 예정일 :"+rs.getInt("expected")+"연장 여부: "+rs.getString("extension")+
 						"연장 횟수: "+rs.getInt("extension_count")+"연체 정보: "+rs.getString("overdue"));
 			}
@@ -215,7 +220,8 @@ public class Rent {
 			sql = "insert into rent (returned) values (current_timestamp) where rent_id ="+RentId;
 			st.executeUpdate(sql);
 			String sql2 = "select expected from rent where rent_id ="+RentId;
-//			String sql3 = "update book set qty = qty - 1 where book_id ="+																	//where rent id~book id=title? 
+			st.executeUpdate(sql2);
+			String sql3 = "update book set qty = qty - 1 where r.book_id =b.book_id";	//where rent id~book id=title? > title만 가지고는 어려울 것 같아서 book id 추가 했으나, 이 where로 적용 될 지 의문
 			System.out.println("반납이 완료되었습니다.");
 			st.close();
 		}
