@@ -4,21 +4,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
 
+
+
 public class Rent {
 
 	public static boolean isNumber(String str) {
 		return str.matches("-?\\d*(\\_\\d+)?");
-	}
-
-	private Member member;
-	private Book book;
-
-	Rent() {
-	}
-
-	Rent(Member m,Book b) {
-		this.member = m;
-		this.book = b;
 	}
 
 	Scanner ss = new Scanner(System.in);
@@ -26,65 +17,62 @@ public class Rent {
 
 	public void control () {
 		while(true) {
-			System.out.println("작업 선택 [RC: 대여 등록, RR: 대여 현황, RU: 대여 연장, RE: 도서 반납, RX: 대여 관리 종료");
+			System.out.println("[대여 관리]");
+			System.out.print("> 작업 선택 [c:대여등록, r:대여현황, u:대여연장, d:도서 반납, x:대여관리종료] : ");
 			String adm = ss.nextLine();
-			if (adm.equals("rx") || adm.equals("RX")) {
-				System.out.println("대여 관리 종료");
+			if (adm.equals("x") || adm.equals("X")) {
+				System.out.println("> 대여관리종료");
 				break;
 			}
 			switch (adm) {
-			case "rc" , "RC" :
-				System.out.println("대여 등록");
-			this.add(); break;
-			case "rr" , "RR" :
-				System.out.println("대여 현황");
+			case "c" , "C" :
+				System.out.println("> 대여등록");
 				System.out.println("회원 ID를 입력해 주세요.");
 				String memId = ss.nextLine();
+				this.add(memId); break;
+			case "r" , "R" :
+				System.out.println("> 대여현황");
+				System.out.println("회원 ID를 입력해 주세요.");
+				memId = ss.nextLine();
 				if(memId.equals("admin")) {
-						this.readAll();
+						this.readAll(); break;
 					} else {
 						this.read(memId); break;
 					}
-			case "ru" , "RU" :
-				System.out.println("대여 연장");
+			case "u" , "U" :
+				System.out.println("> 대여연장");
 				System.out.println("회원 ID를 입력해 주세요.");
 				memId = ss.nextLine();
 				this.extend(memId); break;
-			case "re" , "RE" :
-				System.out.println("도서 반납");
+			case "d" , "D" :
+				System.out.println("> 도서반납");
 				System.out.println("회원 ID를 입력해 주세요.");
 				memId = ss.nextLine();
 				this.returned(memId); break;
 			}
 		}
 	}
-	public void add() { 																											
-
-		System.out.println("회원 ID를 입력해 주세요.");
-		String memId = ss.nextLine();
-		if (memId.equals("")) {
-			System.out.println("잘못된 입력입니다. 다시 입력해 주세요.");
-			memId = ss.nextLine();
-			if (memId.equals("")) return; }
-
-		System.out.println("도서 번호를 입력해 주세요."); 															//like %%로 title 검색해서 목록 보여주기
-		int bookId = si.nextInt();
-		if (bookId<0) return;
-
-		while(true) {
-			//SQL 데이터 저장 > insert into 회원 ID, 도서 ID, 대여일, 반납일
+	public void add(String memId) { 																											
+	
+		while(true) { //SQL 데이터 저장 > insert into 회원 ID, 도서 ID, 대여일, 반납일
 			
+			System.out.println("도서의 번호를 입력해 주세요. 종료 희망 시:Enter"); 	
+			String bookId = ss.nextLine();				
+			if(bookId.equals("")) break;
+			if(!isNumber(bookId)) break;
+			int BookId = Integer.parseInt(bookId);//like %%로 title 검색해서 목록 보여주기
+
 			DBConnection.setConnection();
-			String sql = "insert into rent(member_id,book_id) values(?, ?))";
+			String sql = "insert into rent(member_id,book_id) values(?, ?)";
 			try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
 				pstmt.setString(1, memId);
-				pstmt.setInt(2, bookId);
-				int rowsInserted = pstmt.executeUpdate();
+				pstmt.setString(2, bookId);
 				
 				Statement st = DBConnection.conn.createStatement();
-				String sql2 = "update book set qty = qty+1 where book_id ="+bookId; 						//where 구문 고민 필요
+				String sql2 = "update book set qty = qty + 1 where book_id ="+bookId; 						//where 구문 고민 필요
 				st.executeUpdate(sql2);																		//출력 안 할 것이라 2줄만 썼는데 괜찮은 것인 지 확인 필
 				
+				int rowsInserted = pstmt.executeUpdate();
 				if (rowsInserted > 0) {
 					System.out.println("대여가 완료되었습니다.");
 				}
@@ -102,18 +90,22 @@ public class Rent {
 		DBConnection.setConnection();
 		try {
 			Statement st = DBConnection.conn.createStatement();
-			String sql = "select r.member_id,r.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') AS extension,"
-					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') AS overdue from rent r,book b "
-					+ "where r.member_id="+memId+"and r.book_id=b.book id";
+			String sql = "select r.member_id,b.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') extension,"
+					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r, book b "
+					+ "where r.member_id ='"+memId+"' and r.book_id = b.book_id and r.returned is null";
+			
 			ResultSet rs = st.executeQuery(sql);
-
-			while (rs.next())
-			{
-				System.out.println("회원 ID : "+rs.getString("member_id")+" 책 제목: "+rs.getString("title")+
-						"대여일 : "+rs.getInt("rent")+"반납 예정일 :"+rs.getInt("expected")+"연장 여부: "+rs.getString("extension")+
-						"연장 횟수: "+rs.getInt("extension_count")+"연체 정보: "+rs.getString("overdue"));
+			
+			if (rs.next()) {
+				do { 
+					System.out.println("회원 ID: "+rs.getString("member_id")+", 책 제목: "+rs.getString("title")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일: "+rs.getString("expected")+", 연장 여부: "+rs.getString("extension")+
+						", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+			} else {
+			System.out.println("대여한 내역이 없습니다.");
 			}
-
+			
 			rs.close(); st.close();
 
 		} catch(SQLException e) {
@@ -133,9 +125,9 @@ public class Rent {
 
 			while (rs.next())
 			{
-				System.out.println("회원 ID : "+rs.getString("member_id")+" 도서 ID: "+rs.getString("book_id")+
-						"대여일 : "+rs.getInt("rent")+"반납 예정일 :"+rs.getInt("expected")+"반납일 : "+rs.getInt("returned")+
-						"연장 여부: "+rs.getString("extension")+"연장 횟수: "+rs.getInt("extension_count")+"연체 정보: "+rs.getString("overdue"));
+				System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 ID: "+rs.getString("book_id")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일:"+rs.getString("expected")+", 반납일: "+rs.getString("returned")+
+						", 연장 여부: "+rs.getString("extension")+", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
 			}
 			rs.close(); st.close();
 
@@ -151,16 +143,16 @@ public class Rent {
 		DBConnection.setConnection();
 		try {
 			Statement st = DBConnection.conn.createStatement();
-			String sql = "select r.rent_id,r.member_id,r.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') AS extension,"
-					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') AS overdue from rent r,book b "
-					+ "where r.member_id="+memId+"and r.book_id=b.book id and r.returned is null";
+			String sql = "select r.rent_id,r.member_id,b.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') extension,"
+					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r,book b "
+					+ "where r.member_id='"+memId+"'and r.book_id=b.book_id and r.returned is null";
 			ResultSet rs = st.executeQuery(sql);
 
 			while (rs.next())
 			{
-				System.out.println("대여 번호: "+rs.getInt("rent_id")+"회원 ID : "+rs.getString("member_id")+" 책 제목: "+rs.getString("title")+
-						"대여일: "+rs.getInt("rent")+"반납 예정일 :"+rs.getInt("expected")+"연장 여부: "+rs.getString("extension")+
-						"연장 횟수: "+rs.getInt("extension_count")+"연체 정보: "+rs.getString("overdue"));
+				System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 책 제목: "+rs.getString("title")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일: "+rs.getString("expected")+", 연장 여부: "+rs.getString("extension")+
+						", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
 			}
 
 			st.close(); rs.close();
@@ -173,12 +165,15 @@ public class Rent {
 				int RentId = Integer.parseInt(sRentId);
 
 				st = DBConnection.conn.createStatement();
-				sql = "update rent set extension = true, extension_count = extension_count + 1, expected = date add(expected, INTERVAL 1 WEEK) where rent_id ="+RentId;
+				sql = "update rent set extension = true, extension_count = extension_count + 1, expected = date_add(expected, INTERVAL 1 WEEK) where rent_id ="+RentId;
 				st.executeUpdate(sql);
 				String sql2 = "select expected from rent where rent_id ="+RentId;
 				ResultSet rs2 = st.executeQuery(sql2);
-				rs2.next();
-				System.out.println("연장이 완료되었습니다. 반납 기한:"+rs2.getInt("expected"));
+				
+				while(rs2.next()) {
+				System.out.println("연장이 완료되었습니다. 반납 기한: "+rs2.getString("expected"));
+				}
+				
 				st.close(); rs2.close();
 			}
 
@@ -194,16 +189,16 @@ public class Rent {
 		DBConnection.setConnection();
 		try {
 			Statement st = DBConnection.conn.createStatement();
-			String sql = "select r.rent_id,r.member_id,b.book_id,Sb.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') AS extension,"
-					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') AS overdue from rent r,book b "
-					+ "where r.member_id="+memId+"and r.book_id=b.book_id and r.returned is null"; 
+			String sql = "select r.rent_id,r.member_id,b.book_id,b.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') extension,"
+					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r,book b "
+					+ "where r.member_id='"+memId+"'and r.book_id=b.book_id and r.returned is null"; 
 			ResultSet rs = st.executeQuery(sql);
 			
 			while (rs.next())
 			{
-				System.out.println("대여 번호: "+rs.getInt("rent_id")+"회원 ID : "+rs.getString("member_id")+"도서 번호: "+rs.getInt("book_id")+"도서 제목: "+rs.getString("title")+
-						"대여일: "+rs.getInt("rent")+"반납 예정일 :"+rs.getInt("expected")+"연장 여부: "+rs.getString("extension")+
-						"연장 횟수: "+rs.getInt("extension_count")+"연체 정보: "+rs.getString("overdue"));
+				System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 번호: "+rs.getInt("book_id")+", 도서 제목: "+rs.getString("title")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일: "+rs.getString("expected")+", 연장 여부: "+rs.getString("extension")+
+						", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
 			}
 
 			st.close(); rs.close();
@@ -217,11 +212,13 @@ public class Rent {
 			int RentId = Integer.parseInt(sRentId);
 			
 			st = DBConnection.conn.createStatement();
-			sql = "insert into rent (returned) values (current_timestamp) where rent_id ="+RentId;
+			sql = "update rent set returned = current_timestamp where rent_id ="+RentId;
 			st.executeUpdate(sql);
-			String sql2 = "select expected from rent where rent_id ="+RentId;
-			st.executeUpdate(sql2);
-			String sql3 = "update book set qty = qty - 1 where r.book_id =b.book_id";	//where rent id~book id=title? > title만 가지고는 어려울 것 같아서 book id 추가 했으나, 이 where로 적용 될 지 의문
+//			String sql2 = "select expected from rent where rent_id ="+RentId;
+//			st.executeUpdate(sql2);
+			String sql3 = "update book b, rent r on r.book_id = b.book_id set qty=qty-1 ";	//where r.book_id =b.book_id\"where rent id~book id=title? > title만 가지고는 어려울 것 같아서 book id 추가 했으나, 이 where로 적용 될 지 의문
+			st.executeUpdate(sql3);
+			
 			System.out.println("반납이 완료되었습니다.");
 			st.close();
 		}

@@ -8,8 +8,8 @@ public class Book {
 	
 	public void control() {
 		while (true) {
-			System.out.println("[도서 관리]");
-			System.out.print("> 작업선택 [c:도서등록, u:도서정보수정, r:도서목록, d:도서삭제, x:종료] : ");
+			System.out.println("[도서관리]");
+			System.out.print("> 작업을 선택하십시오. [c:도서등록, u:도서정보수정, r:도서목록, d:도서삭제, x:종료] : ");
 			String choice = sc.nextLine();
 			
 			if (choice.equals("x") || choice.equals("X")) {
@@ -17,16 +17,14 @@ public class Book {
 			}
 			switch (choice) {
 			case "c","C":
-				System.out.println("> 도서 등록");
 				this.add();
 				break;
 			case "u","U":
-				System.out.println("> 도서 정보수정");
 				this.updated();
 				break;
 			case "r","R":
 				System.out.println("> 도서 목록조회");
-				System.out.print("> 작업선택 [a:전체도서목록, s:도서검색, x:종료] : ");
+				System.out.print("> 작업을 선택하십시오 [a:전체도서목록, s:도서검색, x:종료] : ");
 				String cho = sc.nextLine();
 
 				if (cho.equals("x") || cho.equals("X")) {
@@ -38,7 +36,7 @@ public class Book {
 					this.read();
 					break;
 				} else {
-					System.out.println("> 잘못된 입력입니다.");
+					System.out.println("> 잘못된 입력입니다.\n");
 					break;
 				}
 						
@@ -47,7 +45,7 @@ public class Book {
 				this.delete();
 				break;
 			default:
-				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.");
+				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				break;
 			}
 		}
@@ -55,46 +53,47 @@ public class Book {
 	
 	private void add() {
 		while (true) {
-			System.out.print(">> 추가하실 도서의 제목을 입력해주십시오 [x:종료] : ");
+			System.out.println("> 도서 등록 [x:취소]");
+			System.out.print(">> 제목 : ");
 			String name = sc.nextLine();
 			if (name.equalsIgnoreCase("X")) return;
 			if (name.equals("")) {
 				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
-			System.out.print(">> 추가하실 도서의 저자를 입력해주십시오 [x:종료] : ");
+			System.out.print(">> 저자 : ");
 			String author = sc.nextLine();
 			if (author.equalsIgnoreCase("X")) return;
 			if (author.equals("")) {
 				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
-			System.out.print(">> 추가하실 도서의 출판사를 입력해주십시오 [x:종료] : ");
+			System.out.print(">> 출판사 : ");
 			String publisher = sc.nextLine();
 			if (publisher.equalsIgnoreCase("X")) return;
 			if (publisher.equals("")) {
 				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
-			System.out.print(">> 추가하실 도서의 출간년도를 입력해주십시오 [x:종료] : ");
+			System.out.print(">> 출간년도 : ");
 			String year = sc.nextLine();
 			if (year.equalsIgnoreCase("X")) return;
 			if (year.equals("")) {
 				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
-			System.out.print(">> 추가하실 도서의 isbn코드를 입력해주십시오 [x:종료] : ");
+			System.out.print(">> isbn 코드 : ");
 			String isbn = sc.nextLine();
 			if (isbn.equalsIgnoreCase("X")) return;
 			if (isbn.equals("")) {
 				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
-			System.out.print(">> 추가하실 도서의 보유수량을 입력해주십시오 [x:종료] : ");
+			System.out.print(">> 보유수량 : ");
 			String qty = sc.nextLine();
 			if (qty.equalsIgnoreCase("X")) return;
 			if (qty.equals("")) {
-				System.out.println("> 잘못된 입력입니다.\n");
+				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
 			if (!Main.isNumber(qty)) {
@@ -136,17 +135,19 @@ public class Book {
 	
 	private void updated() {
 		while (true) {
-			System.out.print("수정할 도서의 제목을 입력하십시오 [x:종료] : ");
+			System.out.println("> 도서정보 수정");
+			System.out.print("> 수정할 도서의 제목을 입력하십시오. [x:종료] : ");
 			String name = sc.nextLine();
 			if (name.equals("x") || name.equals("X")) {
 				break;
 			}
-			if (name.equals("")) {
+			if (name.equals("") || !(name.equals("x") || name.equals("X"))) {
+				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
 				continue;
 			}
 			
 			// 제목이 일치하는 로우 불러와서 보여주기
-			System.out.print("수정할 항목 선택 [t:제목, a:저자, p:출판사, y:출간년도, i:isbn코드, q:수량 x:종료] : ");
+			System.out.print("> 수정할 항목을 선택하십시오. [t:제목, a:저자, p:출판사, y:출간년도, i:isbn코드, q:수량 x:종료] : ");
 			String choice = sc.nextLine();
 			
 			if (choice.equals("x") || choice.equals("X")) {
@@ -155,7 +156,7 @@ public class Book {
 			switch (choice) {
 			case "t","T":
 				// 새 값 할당받는 코드
-				System.out.println("변경할 제목을 입력하십시오 : ");
+				System.out.print(">> 새 제목을 입력하십시오 : ");
 				String title = sc.nextLine();
 				
 				DBConnection.setConnection();
@@ -168,6 +169,8 @@ public class Book {
 					int rowsInserted = pstmt.executeUpdate();
 					if (rowsInserted > 0) {
 						System.out.println("> 제목 수정이 완료되었습니다.");
+					} else {
+						System.out.println("> 해당 도서를 찾을 수 없습니다.");
 					}
 					pstmt.close();
 					
@@ -178,7 +181,7 @@ public class Book {
 				break;
 				
 			case "a","A":
-				System.out.println("변경할 저자를 입력하십시오 : ");
+				System.out.print(">> 새 저자를 입력하십시오 : ");
 				String author = sc.nextLine();
 				
 				DBConnection.setConnection();
@@ -191,6 +194,8 @@ public class Book {
 					int rowsInserted = pstmt.executeUpdate();
 					if (rowsInserted > 0) {
 						System.out.println("> 저자 수정이 완료되었습니다.");
+					} else {
+						System.out.println("> 해당 도서를 찾을 수 없습니다.");
 					}
 					pstmt.close();
 					
@@ -201,7 +206,7 @@ public class Book {
 				break;
 			
 			case "p","P":
-				System.out.println("변경할 출판사를 입력하십시오 : ");
+				System.out.print(">> 새 출판사를 입력하십시오 : ");
 				String publisher = sc.nextLine();
 				
 				DBConnection.setConnection();
@@ -214,6 +219,8 @@ public class Book {
 					int rowsInserted = pstmt.executeUpdate();
 					if (rowsInserted > 0) {
 						System.out.println("> 출판사 수정이 완료되었습니다.");
+					} else {
+						System.out.println("> 해당 도서를 찾을 수 없습니다.");
 					}
 					pstmt.close();
 
@@ -224,7 +231,7 @@ public class Book {
 				break;
 				
 			case "y","Y":
-				System.out.println("변경할 출판년도를 입력하십시오 : ");
+				System.out.print(">> 새 출판년도를 입력하십시오 : ");
 				String year = sc.nextLine();
 				
 				DBConnection.setConnection();
@@ -237,6 +244,8 @@ public class Book {
 					int rowsInserted = pstmt.executeUpdate();
 					if (rowsInserted > 0) {
 						System.out.println("> 출판년도 수정이 완료되었습니다.");
+					} else {
+						System.out.println("> 해당 도서를 찾을 수 없습니다.");
 					}
 					pstmt.close();
 					
@@ -247,7 +256,7 @@ public class Book {
 				break;
 			
 			case "i","I":
-				System.out.println("변경할 isbn코드를 입력하십시오 : ");
+				System.out.print(">> 새 isbn코드를 입력하십시오 : ");
 				String isbn = sc.nextLine();
 				
 				DBConnection.setConnection();
@@ -260,6 +269,8 @@ public class Book {
 					int rowsInserted = pstmt.executeUpdate();
 					if (rowsInserted > 0) {
 						System.out.println("> isbn코드 수정이 완료되었습니다.");
+					} else {
+						System.out.println("> 해당 도서를 찾을 수 없습니다.");
 					}
 					pstmt.close();
 					
@@ -270,7 +281,7 @@ public class Book {
 				break;
 				
 			case "q","Q":
-				System.out.println("변경할 도서 수량을 입력하십시오 : ");
+				System.out.print(">> 새 도서수량을 입력하십시오 : ");
 				String qty = sc.nextLine();
 				// 유효성 검사
 				if (qty.equalsIgnoreCase("X")) return;
@@ -293,6 +304,8 @@ public class Book {
 					int rowsInserted = pstmt.executeUpdate();
 					if (rowsInserted > 0) {
 						System.out.println("> 도서수량 수정이 완료되었습니다.");
+					} else {
+						System.out.println("> 해당 도서를 찾을 수 없습니다.");
 					}
 					pstmt.close();
 				
@@ -310,6 +323,7 @@ public class Book {
 	}
 	
 	private void readAll() {
+		System.out.println("> 전체 목록보기");
 		DBConnection.setConnection();
 		try {
 			Statement st = DBConnection.conn.createStatement();
@@ -333,7 +347,7 @@ public class Book {
 	
 	private void read() {
 		while (true) {
-			System.out.print(">> 검색할 항목 선택 [t:제목, a:저자, p:출판사, x:종료] : ");
+			System.out.print(">> 검색할 항목을 선택하십시오. [t:제목, a:저자, p:출판사, x:종료] : ");
 			String choice = sc.nextLine();
 			if (choice.equals("x") || choice.equals("X")) {
 				break;
@@ -357,8 +371,13 @@ public class Book {
 					ResultSet rs = pstmt.executeQuery();
 					
 					while (rs.next()) {
-						System.out.println(rs.getInt("book_id")+". "+rs.getString("title")+"\t"+rs.getString("author")+"\t"+rs.getString("publisher")
-						+"\t"+rs.getString("issue_year")+"\t"+rs.getString("total_qty")+"\t"+rs.getString("qty"));
+						System.out.println("대여번호: "+rs.getInt("book_id")+
+										   ", 제목: "+rs.getString("title")+
+										   ", 저자: "+rs.getString("author")+
+										   ", 출판사: "+rs.getString("publisher")+
+										   ", 출판년도: "+rs.getString("issue_year")+
+										   ", 총 보유수량: "+rs.getString("total_qty")+
+										   ", 빌려간 수량: "+rs.getString("qty"));
 					}
 					System.out.println("");
 					
@@ -455,6 +474,8 @@ public class Book {
 				int rowsInserted = pstmt.executeUpdate();
 				if (rowsInserted > 0) {
 					System.out.println("> 도서 삭제가 완료되었습니다.");
+				} else {
+					System.out.println("> 해당 도서를 찾을 수 없습니다.");
 				}
 				pstmt.close();
 
@@ -464,9 +485,4 @@ public class Book {
 			DBConnection.disConnection();
 		}
 	}
-	
-	
-	
-	
-	
 }

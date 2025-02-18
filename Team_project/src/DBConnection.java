@@ -4,9 +4,9 @@ import java.sql.SQLException;
 
 public class DBConnection {
 	private static final String Driver = "com.mysql.cj.jdbc.Driver";
-	private static final String URL = "jdbc:mysql://192.168.0.94:3306/booksystem"; // DB 주소
-	private static final String USER = "Book"; // MySQL 사용자명
-	private static final String PASSWORD = "0212"; // MySQL 비밀번호
+	private static final String URL = "jdbc:mysql://192.168.0.94:3306/test1"; // DB 주소
+	private static final String USER = "Minha"; // MySQL 사용자명
+	private static final String PASSWORD = "0218"; // MySQL 비밀번호
 	
 	public static Connection conn = null;
 	

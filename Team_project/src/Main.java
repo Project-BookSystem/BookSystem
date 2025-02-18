@@ -11,7 +11,7 @@ public class Main {
 		
 		while(true) {
 			System.out.println("[시스템 관리]");
-			System.out.print("> 작업을 선택해 주세요. [B:도서관리, M:회원관리, R:대여관리, X:프로그램 종료] : ");
+			System.out.print("> 작업을 선택해주십시요. [b:도서관리, m:회원관리, r:대여관리, x:프로그램 종료] : ");
 			String admin = s.nextLine();
 			
 			if (admin.equals("x") || admin.equals("X")) break;
@@ -21,10 +21,10 @@ public class Main {
 				book.control();
 				break;
 			case "m" , "M" :
-				//member.control();
+				member.control();
 				break;
 			case "r" , "R" :
-				//rent.control();
+				rent.control();
 			default:
 				System.out.println("잘못된 입력입니다.\n");
 			}
