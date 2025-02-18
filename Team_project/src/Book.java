@@ -1,9 +1,11 @@
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
 
 public class Book {
+	
 	Scanner sc = new Scanner(System.in);
 	
 	public void control() {
@@ -134,192 +136,78 @@ public class Book {
 	}
 	
 	private void updated() {
-		while (true) {
-			System.out.println("> 도서정보 수정");
-			System.out.print("> 수정할 도서의 제목을 입력하십시오. [x:종료] : ");
-			String name = sc.nextLine();
-			if (name.equals("x") || name.equals("X")) {
-				break;
-			}
-			if (name.equals("") || !(name.equals("x") || name.equals("X"))) {
-				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
-				continue;
-			}
-			
-			// 제목이 일치하는 로우 불러와서 보여주기
-			System.out.print("> 수정할 항목을 선택하십시오. [t:제목, a:저자, p:출판사, y:출간년도, i:isbn코드, q:수량 x:종료] : ");
-			String choice = sc.nextLine();
-			
-			if (choice.equals("x") || choice.equals("X")) {
-				break;
-			}
-			switch (choice) {
-			case "t","T":
-				// 새 값 할당받는 코드
-				System.out.print(">> 새 제목을 입력하십시오 : ");
-				String title = sc.nextLine();
-				
-				DBConnection.setConnection();
-				try {
-					String sql = "UPDATE book SET title=? WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, title);
-					pstmt.setString(2, name);
-					
-					int rowsInserted = pstmt.executeUpdate();
-					if (rowsInserted > 0) {
-						System.out.println("> 제목 수정이 완료되었습니다.");
-					} else {
-						System.out.println("> 해당 도서를 찾을 수 없습니다.");
-					}
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-				
-			case "a","A":
-				System.out.print(">> 새 저자를 입력하십시오 : ");
-				String author = sc.nextLine();
-				
-				DBConnection.setConnection();
-				try {
-					String sql = "UPDATE book SET author=? WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, author);
-					pstmt.setString(2, name);
-					
-					int rowsInserted = pstmt.executeUpdate();
-					if (rowsInserted > 0) {
-						System.out.println("> 저자 수정이 완료되었습니다.");
-					} else {
-						System.out.println("> 해당 도서를 찾을 수 없습니다.");
-					}
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-			
-			case "p","P":
-				System.out.print(">> 새 출판사를 입력하십시오 : ");
-				String publisher = sc.nextLine();
-				
-				DBConnection.setConnection();
-				try {
-					String sql = "UPDATE book SET publisher=? WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, publisher);
-					pstmt.setString(2, name);
-					
-					int rowsInserted = pstmt.executeUpdate();
-					if (rowsInserted > 0) {
-						System.out.println("> 출판사 수정이 완료되었습니다.");
-					} else {
-						System.out.println("> 해당 도서를 찾을 수 없습니다.");
-					}
-					pstmt.close();
+		System.out.println("> 도서정보 수정");
+		System.out.print("> 수정할 도서의 제목을 입력하십시오. [x:종료] : ");
+		String name = sc.nextLine().toUpperCase();
+		if (name.equalsIgnoreCase("X")) return;
 
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-				
-			case "y","Y":
-				System.out.print(">> 새 출판년도를 입력하십시오 : ");
-				String year = sc.nextLine();
-				
-				DBConnection.setConnection();
-				try {
-					String sql = "UPDATE book SET issue_year=? WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, year);
-					pstmt.setString(2, name);
-					
-					int rowsInserted = pstmt.executeUpdate();
-					if (rowsInserted > 0) {
-						System.out.println("> 출판년도 수정이 완료되었습니다.");
-					} else {
-						System.out.println("> 해당 도서를 찾을 수 없습니다.");
-					}
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-			
-			case "i","I":
-				System.out.print(">> 새 isbn코드를 입력하십시오 : ");
-				String isbn = sc.nextLine();
-				
-				DBConnection.setConnection();
-				try {
-					String sql = "UPDATE book SET isbn=? WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, isbn);
-					pstmt.setString(2, name);
-					
-					int rowsInserted = pstmt.executeUpdate();
-					if (rowsInserted > 0) {
-						System.out.println("> isbn코드 수정이 완료되었습니다.");
-					} else {
-						System.out.println("> 해당 도서를 찾을 수 없습니다.");
-					}
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-				
-			case "q","Q":
-				System.out.print(">> 새 도서수량을 입력하십시오 : ");
-				String qty = sc.nextLine();
-				// 유효성 검사
-				if (qty.equalsIgnoreCase("X")) return;
-				if (qty.equals("")) {
-					System.out.println("> 잘못된 입력입니다.\n");
-					continue;
-				}
-				if (!Main.isNumber(qty)) {
-					break;
-				}
-				int total_qty = Integer.parseInt(qty);
-				
-				DBConnection.setConnection();
-				try {
-					String sql = "UPDATE book SET total_qty=? WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setInt(1, total_qty);
-					pstmt.setString(2, name);
-					
-					int rowsInserted = pstmt.executeUpdate();
-					if (rowsInserted > 0) {
-						System.out.println("> 도서수량 수정이 완료되었습니다.");
-					} else {
-						System.out.println("> 해당 도서를 찾을 수 없습니다.");
-					}
-					pstmt.close();
-				
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-			
-			default:
-				System.out.println("> 잘못된 입력입니다.\n");
-				break;
+		System.out.print("> 수정할 항목을 선택하십시오. [1.제목 2.저자 3.출판사 4.출간년도 5.ISBN 6.수량 x:종료] : ");
+		String choice = sc.nextLine();
+		if (choice.equals("X")) return;
+
+		String column = null;
+		String newValue = null;
+
+		switch (choice) {
+		case "1":
+			column = "title";
+			System.out.print(">> 새 제목 : ");
+			newValue = sc.nextLine();
+			break;
+		case "2":
+			column = "author";
+			System.out.print(">> 새 저자 : ");
+			newValue = sc.nextLine();
+			break;
+		case "3":
+			column = "publisher";
+			System.out.print(">> 새 출판사 : ");
+			newValue = sc.nextLine();
+			break;
+		case "4":
+			column = "issue_year";
+			System.out.print(">> 새 출판년도 : ");
+			newValue = sc.nextLine();
+			break;
+		case "5":
+			column = "isbn";
+			System.out.print(">> 새 ISBN 코드 : ");
+			newValue = sc.nextLine();
+			break;
+		case "6":
+			column = "total_qty";
+			System.out.print(">> 새 도서 수량 : ");
+			newValue = sc.nextLine();
+			if (!Main.isNumber(newValue) && newValue=="0") {
+				System.out.println("> 잘못된 입력입니다. 숫자를 입력하십시오.");
+				return;
 			}
+			break;
+		default:
+			System.out.println("> 잘못된 선택입니다.");
+			return;
 		}
+		DBConnection.setConnection();
+		String sql = "UPDATE book SET " + column + " = ? WHERE title = ?";
+
+		try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
+			if (column.equals("total_qty")) {
+				pstmt.setInt(1, Integer.parseInt(newValue));
+			} else {
+				pstmt.setString(1, newValue);
+			}
+			pstmt.setString(2, name);
+
+			int rowsUpdated = pstmt.executeUpdate();
+			if (rowsUpdated > 0) {
+				System.out.println("> 도서 정보가 수정되었습니다.");
+			} else {
+				System.out.println("> 해당 도서를 찾을 수 없습니다.");
+			}
+		} catch (SQLException e) {
+			System.out.println("데이터베이스 오류 발생: " + e.getMessage());
+		}
+		DBConnection.disConnection();
 	}
 	
 	private void readAll() {
@@ -346,109 +234,71 @@ public class Book {
 	}
 	
 	private void read() {
-		while (true) {
-			System.out.print(">> 검색할 항목을 선택하십시오. [t:제목, a:저자, p:출판사, x:종료] : ");
-			String choice = sc.nextLine();
-			if (choice.equals("x") || choice.equals("X")) {
-				break;
-			}
-			if (choice.equals("")) {
-				System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
-				continue;
-			}
-			switch (choice) {
-			case "t","T":
-				System.out.print(">> 도서의 제목을 입력하십시오 : ");
-				String title = sc.nextLine();
-				
-				// 제목으로 책 정보 가져오는 sql작성
-				DBConnection.setConnection();
-				try {
-					String sql = "SELECT book_id,title,author,publisher,issue_year,total_qty,qty FROM book WHERE title=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, title);
-					
-					ResultSet rs = pstmt.executeQuery();
-					
-					while (rs.next()) {
-						System.out.println("대여번호: "+rs.getInt("book_id")+
-										   ", 제목: "+rs.getString("title")+
-										   ", 저자: "+rs.getString("author")+
-										   ", 출판사: "+rs.getString("publisher")+
-										   ", 출판년도: "+rs.getString("issue_year")+
-										   ", 총 보유수량: "+rs.getString("total_qty")+
-										   ", 빌려간 수량: "+rs.getString("qty"));
-					}
-					System.out.println("");
-					
-					rs.close();
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-				
-			case "a","A":
-				System.out.print(">> 도서의 저자를 입력하십시오 : ");
-				String author = sc.nextLine();
-			
-				// 저자로 책 정보 가져오는 sql작성
-				DBConnection.setConnection();
-				try {
-					String sql = "SELECT book_id,title,author,publisher,issue_year,total_qty,qty FROM book WHERE author=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, author);
-					ResultSet rs = pstmt.executeQuery();
-					
-					while (rs.next()) {
-						System.out.println(rs.getInt("book_id")+". "+rs.getString("title")+"\t"+rs.getString("author")+"\t"+rs.getString("publisher")
-						+"\t"+rs.getString("issue_year")+"\t"+rs.getString("total_qty")+"\t"+rs.getString("qty"));
-					}
-					System.out.println("");
-					
-					rs.close();
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
-				
-			case "p","P":
-				System.out.print(">> 도서의 출판사를 입력하십시오 : ");
-				String publisher = sc.nextLine();
-			
-				// 출판사로 책 정보 가져오는 sql작성
-				DBConnection.setConnection();
-				try {
-					String sql = "SELECT book_id,title,author,publisher,issue_year,total_qty,qty FROM book WHERE publisher=?";
-					PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql);
-					pstmt.setString(1, publisher);
-					ResultSet rs = pstmt.executeQuery();
-					
-					while (rs.next()) {
-						System.out.println(rs.getInt("book_id")+". "+rs.getString("title")+"\t"+rs.getString("author")+"\t"+rs.getString("publisher")
-						+"\t"+rs.getString("issue_year")+"\t"+rs.getString("total_qty")+"\t"+rs.getString("qty"));
-					}
-					System.out.println("");
-					
-					rs.close();
-					pstmt.close();
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				DBConnection.disConnection();
-				break;
+	    System.out.println("> 도서정보 검색");
+	    while (true) {
+	        System.out.print(">> 검색할 항목을 선택하십시오. [1.제목, 2.저자, 3.출판사, x:종료] : ");
+	        String choice = sc.nextLine().toUpperCase();
+	        
+	        if (choice.equals("X")) {
+	            break;
+	        }
 
-			default:
-				System.out.println("> 잘못된 입력입니다.\n");
-				break;
-			}
-		}
+	        String column = null;
+	        String newValue = null;
+	        
+	        switch (choice) {
+	            case "1": // 제목
+	                column = "title";
+	                System.out.print(">> 도서의 제목을 입력하십시오 : ");
+	    			newValue = sc.nextLine();
+	                break;
+	            case "2": // 저자
+	                column = "author";
+	                System.out.print(">> 도서의 저자를 입력하십시오 : ");
+	    			newValue = sc.nextLine();
+	                break;
+	            case "3": // 출판사
+	                column = "publisher";
+	                System.out.print(">> 도서의 출판사를 입력하십시오 : ");
+	    			newValue = sc.nextLine();
+	                break;
+	            default:
+	                System.out.println("> 잘못된 입력입니다. 다시 입력해주십시오.\n");
+	                continue;
+	        }
+
+	        // DB 연결 및 SQL 실행
+	        DBConnection.setConnection();
+	        String sql = "SELECT book_id, title, author, publisher, issue_year, total_qty, qty FROM book WHERE " + column + "=?";
+	        try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
+	            pstmt.setString(1, newValue);
+	            ResultSet rs = pstmt.executeQuery();
+	            
+	            boolean found = false;
+	            while (rs.next()) {
+	                found = true;
+	                System.out.println("대여번호: " + rs.getInt("book_id") + 
+	                                   ", 제목: " + rs.getString("title") + 
+	                                   ", 저자: " + rs.getString("author") + 
+	                                   ", 출판사: " + rs.getString("publisher") + 
+	                                   ", 출판년도: " + rs.getString("issue_year") + 
+	                                   ", 총 보유수량: " + rs.getString("total_qty") + 
+	                                   ", 빌려간 수량: " + rs.getString("qty"));
+	            }
+	            
+	            if (!found) {
+	                System.out.println("> 해당 항목의 도서를 찾을 수 없습니다.\n");
+	            }
+	            
+	            rs.close();
+	            
+	        } catch (SQLException e) {
+	            System.out.println("데이터베이스 오류 발생: " + e.getMessage());
+	        }
+	        DBConnection.disConnection();
+
+	        System.out.println(""); // 추가적인 공백 출력
+	    }
 	}
 	
 	private void delete() {

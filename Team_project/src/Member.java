@@ -8,7 +8,7 @@ public class Member {
 	public void control() {
 		while (true) {
 			System.out.println("[회원관리]");
-			System.out.print("> 작업을 선책하십시오. [c:회원등록, u:회원정보수정, d:회원탈퇴, r:회원조회, x:종료] : ");
+			System.out.print("> 작업을 선택하십시오. [c:회원등록, u:회원정보수정, d:회원탈퇴, r:회원조회, x:종료] : ");
 			String choice = sc.nextLine().toUpperCase();  // toUpperCase란 소문자를 입력하여도 실행가능하게 해주는 코드
 			
 			if (choice.equals("X")) {
@@ -48,6 +48,10 @@ public class Member {
 			System.out.print(">> 아이디: ");
 			String userId = sc.nextLine();
 			if (userId.equalsIgnoreCase("X")) return;
+			if (userId.equalsIgnoreCase("admin")) {
+				System.out.println("> admin은 입력하실 수 없습니다.");
+				continue;
+			}
 			if (userId.isEmpty() || userId.length() > 32) {
 				System.out.println("> 아이디 입력 실패: 1~32자 사이로 입력해야 합니다.");
 				continue;
@@ -84,6 +88,7 @@ public class Member {
 				System.out.println("> 전화번호 입력 실패: 1~16자 사이로 입력해야 합니다.");
 				continue;
 			}
+			
 			DBConnection.setConnection();
 			String sql = "INSERT INTO member (name, user_id, password, birthday, gender, mobile, overdue) VALUES (?, ?, ?, ?, ?, ?, 'X')";
 			try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) { // ? 사용하여 입력값을 설정할 수 있는 객체 배열에 얽매이지 않음.
@@ -106,59 +111,92 @@ public class Member {
 		}
 	}
 
-	private void updateMember() { // 수정) 아이디 admin 입력 시 연체여부 관리할 수 있게 수정
-		System.out.print("> 수정할 회원의 아이디를 입력하십시오. [x:취소] : ");
-		String userId = sc.nextLine();
-		if (userId.equalsIgnoreCase("X")) return;
+	private void updateMember() {
+	    // 처음에 수정할 회원의 아이디를 입력 받음
+		System.out.println("> 회원정보수정");
+	    System.out.print("> 회원ID를 입력하십시오. [x:취소] : ");
+	    String userId = sc.nextLine();
+	    if (userId.equalsIgnoreCase("X")) return;
 
-		System.out.print("> 수정할 항목을 선택하십시오. [1.이름 2.비밀번호 3.전화번호 4.연체여부(o/x) x:취소] :");
-		String choice = sc.nextLine().toUpperCase();
-		if (choice.equals("X")) return;
+	    // admin이 입력된 경우 다른 회원의 아이디를 입력받음
+	    String adminId = null;  // admin 상태를 계속 추적할 변수 추가
+	    if (userId.equalsIgnoreCase("admin")) {
+	        adminId = userId;  // admin 아이디를 따로 저장
+	        System.out.print("> 접근할 회원의 ID를 입력하십시오. [x:취소] : ");
+	        userId = sc.nextLine();
+	        if (userId.equalsIgnoreCase("X")) return;
+	    }
 
-		String column = null;
-		String newValue = null;
+	    // 수정할 항목을 선택
+	    String choice = "";
+	    while (true) {
+	        // admin일 때 '연체여부' 항목도 포함되도록 설정
+	        System.out.print("> 수정할 항목을 선택하십시오. [1.이름 2.비밀번호 3.전화번호"
+	                + (adminId != null ? " 4.연체여부(o/x)" : "") + " x:취소] : ");
+	        choice = sc.nextLine().toUpperCase();
+	        if (choice.equals("X")) return;
 
-		switch (choice) {
-		case "1":
-			column = "name";
-			System.out.print(">> 새 이름 : ");
-			newValue = sc.nextLine();
-			break;
-		case "2":
-			column = "password";
-			System.out.print(">> 새 비밀번호: ");
-			newValue = sc.nextLine();
-			break;
-		case "3":
-			column = "mobile";
-			System.out.print(">> 새 전화번호: ");
-			newValue = sc.nextLine();
-			break;
-		case "4":
-			column = "overdue";
-			System.out.print(">> 연체 여부 (O/X): ");
-			newValue = sc.nextLine();
-			break;
-		default:
-			System.out.println("> 잘못된 선택입니다.");
-			return;
-		}
-		DBConnection.setConnection();
-		String sql = "UPDATE member SET " + column + " = ? WHERE user_id = ?";
-		try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
-			pstmt.setString(1, newValue);
-			pstmt.setString(2, userId);
+	        // 잘못된 선택이 아닌지 체크
+	        if (choice.equals("1") || choice.equals("2") || choice.equals("3") || (adminId != null && choice.equals("4"))) {
+	            break;
+	        } else {
+	            System.out.println("> 잘못된 선택입니다. 다시 시도하세요.");
+	        }
+	    }
 
-			int rowsUpdated = pstmt.executeUpdate();
-			if (rowsUpdated > 0) {
-				System.out.println("> 회원정보가 수정되었습니다.");
-			} else {
-				System.out.println("> 해당 아이디의 회원을 찾을 수 없습니다.");
-			}
-		} catch (SQLException e) {
-			System.out.println("데이터베이스 오류 발생: " + e.getMessage());
-		}
-		DBConnection.disConnection();
+	    String column = null;
+	    String newValue = null;
+
+	    // 선택된 항목에 따라 처리
+	    switch (choice) {
+	        case "1":
+	            column = "name";
+	            System.out.print(">> 새 이름 : ");
+	            newValue = sc.nextLine();
+	            break;
+	        case "2":
+	            column = "password";
+	            System.out.print(">> 새 비밀번호: ");
+	            newValue = sc.nextLine();
+	            break;
+	        case "3":
+	            column = "mobile";
+	            System.out.print(">> 새 전화번호: ");
+	            newValue = sc.nextLine();
+	            break;
+	        case "4":
+	            if (adminId != null) {  // admin일 때만 연체여부 항목 처리
+	                column = "overdue";
+	                System.out.print(">> 연체 여부 (O/X): ");
+	                newValue = sc.nextLine();
+	                
+	            } else {
+	                System.out.println("> 연체 여부는 관리자만 수정할 수 있습니다.");
+	                return;
+	            }
+	            break;
+	        default:
+	            System.out.println("> 잘못된 선택입니다.");
+	            return;
+	    }
+	    
+	    DBConnection.setConnection();
+	    String sql = "UPDATE member SET " + column + " = ? WHERE user_id = ?";
+	    try (PreparedStatement pstmt = DBConnection.conn.prepareStatement(sql)) {
+	        pstmt.setString(1, newValue);
+	        pstmt.setString(2, userId);
+
+	        int rowsUpdated = pstmt.executeUpdate();
+	        if (rowsUpdated > 0) {
+	        	System.out.println("> " + column + "이(가) 성공적으로 수정되었습니다.");
+	            System.out.println("> 회원정보가 수정되었습니다.");
+	        } else {
+	            System.out.println("> 해당 아이디의 회원을 찾을 수 없습니다.");
+	        }
+	    } catch (SQLException e) {
+	        System.out.println("데이터베이스 오류 발생: " + e.getMessage());
+	    }
+	    DBConnection.disConnection();
 	}
 	
 	private void deleteMember() { // 수정) 정말 탈퇴할 것인지 한번더 물어보기

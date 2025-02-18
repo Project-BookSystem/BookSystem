@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
@@ -35,6 +36,14 @@ public class Main {
 	public static boolean isNumber(String str) {
 		// 정규식을 사용하여 숫자와 소수점만 있는지 확인
 		return str.matches("-?\\d*(\\.\\d+)?"); // 정규표현식
+	}
+	
+	public static void clear() {
+		try {
+			new ProcessBuilder("cmd","/c","cls").inheritIO().start().waitFor();
+		} catch (InterruptedException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

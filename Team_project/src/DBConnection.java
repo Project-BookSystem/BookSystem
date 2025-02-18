@@ -22,7 +22,6 @@ public class DBConnection {
 //	}
 	
 	public static void setConnection() {
-
 		try {
 			Class.forName(Driver);
 			conn = DriverManager.getConnection(URL, USER, PASSWORD);
