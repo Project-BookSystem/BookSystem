@@ -1,0 +1,358 @@
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Scanner;
+
+public class Rent {
+	
+	Scanner sc = new Scanner(System.in);
+	
+	public void control () {
+		while(true) {
+			System.out.println("[대여 관리]");
+			System.out.print("> 작업 선택 [c:대여등록, r:대여현황, u:대여연장, d:도서 반납, x:대여관리종료] : ");
+			String adm = sc.nextLine();
+			if (adm.equals("x") || adm.equals("X")) {
+				System.out.println("> 대여관리종료");
+				break;
+			}
+			switch (adm) {
+			case "c" , "C" :
+				System.out.println("> 대여등록");
+				System.out.println(">> 회원 ID를 입력해 주세요.");
+				String memId = sc.nextLine();
+				this.add(memId); break;
+			case "r" , "R" :
+				System.out.println("> 대여현황");
+				System.out.println(">> 회원 ID를 입력해 주세요.");
+				memId = sc.nextLine();
+				if(memId.equals("admin")) {
+						this.readAll(); break;
+					} else {
+						this.read(memId); break;
+					}
+			case "u" , "U" :
+				System.out.println("> 대여연장");
+				System.out.println(">> 회원 ID를 입력해 주세요.");
+				memId = sc.nextLine();
+				this.extend(memId); break;
+			case "d" , "D" :
+				System.out.println("> 도서반납");
+				System.out.println(">> 회원 ID를 입력해 주세요.");
+				memId = sc.nextLine();
+				this.returned(memId); break;
+			}
+		}
+	}
+	public void add(String memId) { 																											
+	
+		while(true) { //SQL 데이터 저장 > insert into 회원 ID, 도서 ID, 대여일, 반납일
+			
+			System.out.println("> 도서의 번호를 입력해 주세요. 종료 희망 시:Enter"); 	
+			String sbookId = sc.nextLine();				
+			if(sbookId.equals("")) break;
+			if(!Main.isNumber(sbookId)) break;
+			int bookId = Integer.parseInt(sbookId);//like %%로 title 검색해서 목록 보여주기
+
+			DBConnection.setConnection();
+			String checkSql = "SELECT qty, total_qty FROM book WHERE book_id = ?";
+			try (PreparedStatement pstmtCheck = DBConnection.conn.prepareStatement(checkSql)) {
+			    pstmtCheck.setInt(1, bookId);
+			    ResultSet rs = pstmtCheck.executeQuery();
+			    if (rs.next()) {
+			        int qty = rs.getInt("qty");
+			        int totalQty = rs.getInt("total_qty");
+
+			        // 조건이 만족하면 INSERT 실행
+			        if (qty < totalQty) {
+			            // rent 테이블에 데이터 삽입
+			            String insertSql = "INSERT INTO rent(member_id, book_id) VALUES(?, ?)";
+			            try (PreparedStatement pstmtInsert = DBConnection.conn.prepareStatement(insertSql)) {
+			                pstmtInsert.setString(1, memId);
+			                pstmtInsert.setInt(2, bookId);
+			                int rowsInserted = pstmtInsert.executeUpdate();  // INSERT 실행
+
+			                if (rowsInserted > 0) {
+			                    // book 테이블에서 qty 업데이트
+			                    Statement st = DBConnection.conn.createStatement();
+			                    String sql2 = "UPDATE book SET qty=qty+1 WHERE book_id="+bookId;
+			                    st.executeUpdate(sql2);  // UPDATE 실행
+			                    
+			                    System.out.println("> 대여가 완료되었습니다.");
+			                } else {
+			                    System.out.println("> 대여 등록에 실패했습니다.");
+			                }
+			            }
+			            catch (Exception e) {
+							e.printStackTrace();
+						}
+			        } else {
+			            System.out.println("> 대여할 수 없습니다. 재고가 부족합니다.");
+			        }
+			    }
+			} catch (SQLException e) {
+			    e.printStackTrace();
+			}
+			DBConnection.disConnection();		
+			this.read(memId);	
+		}
+	}
+	public void read(String memId) { //사용자의 대출목록 조회용
+		// SQL 데이터 읽어오기 > select 멤버아이디, 책 이름>from book, 대출일, 반납예정일, 연장여부, 연장횟수, 연체여부 반복문으로
+
+		DBConnection.setConnection();
+		try {
+			Statement st = DBConnection.conn.createStatement();
+			String sql = "select r.member_id,b.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') extension,"
+					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r, book b "
+					+ "where r.member_id ='"+memId+"' and r.book_id = b.book_id and r.returned is null";
+			ResultSet rs = st.executeQuery(sql);
+			
+			if (rs.next()) {
+				do { 
+					System.out.println("회원 ID: "+rs.getString("member_id")+", 책 제목: "+rs.getString("title")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일: "+rs.getString("expected")+", 연장 여부: "+rs.getString("extension")+
+						", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+			} else {
+			System.out.println("> 대여한 내역이 없습니다.");
+			}
+			
+			rs.close(); st.close();
+
+		} catch(SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		DBConnection.disConnection();	
+	}
+	public void readAll () { //관리자의 대출목록 조회용 											
+		//도서별 대출내역,반납완료도서목록,미반납도서목록,연체도서목록// SQL 데이터 읽어오기 > select * from rent
+
+		DBConnection.setConnection();
+
+		while(true) {
+			System.out.println("[대여현황 관리]");
+
+			System.out.print("> 작업 선택 [a:전체대여현황, m:도서별대여현황, r:반납완료도서목록, n:미반납도서목록, d:연체도서목록, x:대여현황관리종료] : ");
+			String RA = sc.nextLine();
+			if (RA.equals("x") || RA.equals("X")) {
+				System.out.println("> 대여현황관리종료");
+				break;
+			}
+			switch (RA) {
+			case "m" , "M" :
+				System.out.println("> 도서별대여현황");
+			try {	
+				System.out.println("> 도서의 번호를 입력해 주세요. 종료 희망 시:Enter"); 	
+				String sbookId = sc.nextLine();				
+				if(sbookId.equals("")) break;
+				if(!Main.isNumber(sbookId)) break;
+				int bookId = Integer.parseInt(sbookId);
+				
+				Statement st = DBConnection.conn.createStatement();
+				String sql = "select r.rent_id,r.member_id,r.book_id,r.rent,r.expected,r.returned,IF(r.extension = 1, 'O', 'X') extension,"
+								+"r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r join book b on r.book_id = b.book_id "
+								+ "where r.book_id="+bookId;
+				ResultSet rs = st.executeQuery(sql);
+
+				if (rs.next()){
+					do {
+					System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 ID: "+rs.getString("book_id")+
+							", 대여일: "+rs.getString("rent")+", 반납 예정일:"+rs.getString("expected")+", 반납일: "+(rs.getString("returned")==null?"미반납":rs.getString("returned"))+
+							", 연장 여부: "+rs.getString("extension")+", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+				} else {
+					System.out.println("대여한 내역이 없습니다.");
+				}
+				rs.close(); st.close();
+			} catch(SQLException e) {
+				System.out.println(e.getMessage());
+			} 
+			break;
+
+			case "r" , "R" :
+				System.out.println("> 반납완료도서목록");
+			try {
+				Statement st = DBConnection.conn.createStatement();
+				String sql = "select * from rent where returned is not null";
+				ResultSet rs = st.executeQuery(sql);
+
+				if (rs.next()) {
+					do {
+					System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 ID: "+rs.getString("book_id")+
+							", 대여일: "+rs.getString("rent")+", 반납 예정일:"+rs.getString("expected")+", 반납일: "+(rs.getString("returned")==null?"미반납":rs.getString("returned"))+
+							", 연장 여부: "+rs.getString("extension")+", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+				} else {
+					System.out.println("반납 완료된 도서가 없습니다.");
+				}
+				rs.close(); st.close();
+			} catch(SQLException e) {
+				System.out.println(e.getMessage());
+			}
+			break;
+
+			case "n" , "N" :
+				System.out.println("> 미반납도서목록");
+			try {
+				Statement st = DBConnection.conn.createStatement();
+				String sql = "select * from rent where returned is null";
+				ResultSet rs = st.executeQuery(sql);
+
+				if (rs.next()) { 
+					do {
+					System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 ID: "+rs.getString("book_id")+
+							", 대여일: "+rs.getString("rent")+", 반납 예정일:"+rs.getString("expected")+", 반납일: "+(rs.getString("returned")==null?"미반납":rs.getString("returned"))+
+							", 연장 여부: "+rs.getString("extension")+", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+				} else {
+					System.out.println("미반납된 도서가 없습니다.");
+				}
+				rs.close(); st.close();
+			} catch(SQLException e) {
+				System.out.println(e.getMessage());
+			}
+			break;
+
+			case "d" , "D" :
+				System.out.println("> 연체도서목록");
+			try {
+				Statement st = DBConnection.conn.createStatement();
+				String sql = "select * from rent where overdue is true";
+				ResultSet rs = st.executeQuery(sql);
+
+				if (rs.next()) {
+					do {
+					System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 ID: "+rs.getString("book_id")+
+							", 대여일: "+rs.getString("rent")+", 반납 예정일:"+rs.getString("expected")+", 반납일: "+(rs.getString("returned")==null?"미반납":rs.getString("returned"))+
+							", 연장 여부: "+rs.getString("extension")+", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+				} else {
+					System.out.println("연체중인 도서가 없습니다.");
+				}
+				rs.close(); st.close();
+			} catch(SQLException e) {
+				System.out.println(e.getMessage());
+			}
+			break;
+			case "a" , "A" :
+				System.out.println("> 전체대여현황");
+			try {
+				Statement st = DBConnection.conn.createStatement();
+				String sql = "select * from rent";
+				ResultSet rs = st.executeQuery(sql);
+
+				if (rs.next()) {
+					do{
+					System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 ID: "+rs.getString("book_id")+
+							", 대여일: "+rs.getString("rent")+", 반납 예정일:"+rs.getString("expected")+", 반납일: "+(rs.getString("returned")==null?"미반납":rs.getString("returned"))+
+							", 연장 여부: "+rs.getString("extension")+", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+				} while (rs.next());
+				} else {
+					System.out.println("대여한 내역이 없습니다.");
+				}
+				rs.close(); st.close();
+			} catch(SQLException e) {
+				System.out.println(e.getMessage());
+			}
+			}
+		}
+		DBConnection.disConnection();	
+
+	}
+	public void extend(String memId) {
+		// SQL 데이터 읽어오기 > select 멤버아이디, 책 이름>from book, 대출일, 반납예정일, 연장여부, 연장횟수, 연체여부 반복문 + 반납일(returned) is null인 값만 show
+
+		DBConnection.setConnection();
+		try {
+			Statement st = DBConnection.conn.createStatement();
+			String sql = "select r.rent_id,r.member_id,b.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') extension,"
+					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r,book b "
+					+ "where r.member_id='"+memId+"'and r.book_id=b.book_id and r.returned is null";
+			ResultSet rs = st.executeQuery(sql);
+
+			while (rs.next())
+			{
+				System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 책 제목: "+rs.getString("title")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일: "+rs.getString("expected")+", 연장 여부: "+rs.getString("extension")+
+						", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+			}
+
+			st.close(); rs.close();
+
+			while(true) {
+				System.out.println("> 연장하실 도서의 대여 번호를 입력해 주세요. 종료 희망 시:Enter"); // rent_id 입력 받고 연장(update)하는 sql문
+				String sRentId = sc.nextLine();				
+				if(sRentId.equals("")) break;
+				if(!Main.isNumber(sRentId)) break;
+				int RentId = Integer.parseInt(sRentId);
+
+				st = DBConnection.conn.createStatement();
+				sql = "update rent set extension = true, extension_count = extension_count + 1, expected = date_add(expected, INTERVAL 1 WEEK) where rent_id ="+RentId;
+				st.executeUpdate(sql);
+				String sql2 = "select expected from rent where rent_id ="+RentId;
+				ResultSet rs2 = st.executeQuery(sql2);
+				
+				while(rs2.next()) {
+				System.out.println("> 연장이 완료되었습니다. 반납 기한: "+rs2.getString("expected"));
+				}
+				
+				st.close(); rs2.close();
+			}
+
+		} catch(SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		DBConnection.disConnection();
+
+	}
+	public void returned(String memId) {
+		// SQL 데이터 읽어오기 > select 멤버아이디, 책 이름>from book, 대출일, 반납예정일, 연장여부, 연장횟수, 연체여부를 반납일(returned) is null인 값만 show
+
+		DBConnection.setConnection();
+		try {
+			Statement st = DBConnection.conn.createStatement();
+			String sql = "select r.rent_id,r.member_id,b.book_id,b.title,r.rent,r.expected,IF(r.extension = 1, 'O', 'X') extension,"
+					+ "r.extension_count,IF(r.overdue = 1, 'O', 'X') overdue from rent r,book b "
+					+ "where r.member_id='"+memId+"'and r.book_id=b.book_id and r.returned is null";
+			ResultSet rs = st.executeQuery(sql);
+
+			while (rs.next())
+			{
+				System.out.println("대여 번호: "+rs.getInt("rent_id")+", 회원 ID: "+rs.getString("member_id")+", 도서 번호: "+rs.getInt("book_id")+", 도서 제목: "+rs.getString("title")+
+						", 대여일: "+rs.getString("rent")+", 반납 예정일: "+rs.getString("expected")+", 연장 여부: "+rs.getString("extension")+
+						", 연장 횟수: "+rs.getInt("extension_count")+", 연체 정보: "+rs.getString("overdue"));
+			}
+			st.close(); rs.close();
+			
+			while(true) {
+				// SQL rent> returned insert, overdue check(?)>penalty, Book qty update(외부로 반출되는 수량)
+				System.out.println("> 반납하실 도서의 대여 번호를 입력해 주세요. 종료 희망 시:Enter"); // rent_id 입력 받고 연장(update)하는 sql문
+				String sRentId = sc.nextLine();				
+				if(sRentId.equals("")) break;
+				if(!Main.isNumber(sRentId)) break;
+				int RentId = Integer.parseInt(sRentId);
+				
+				try {
+					Statement st1 = DBConnection.conn.createStatement();
+					String sql2 = "UPDATE rent SET returned = CURRENT_TIMESTAMP() WHERE rent_id = " + RentId + " AND returned IS NULL";
+					st1.executeUpdate(sql2);
+					st1.close();
+					
+					Statement st2 = DBConnection.conn.createStatement();
+					String sql3 = "update book b join rent r on r.book_id=b.book_id set b.qty = b.qty - 1 where r.rent_id = "+RentId;
+					st2.executeUpdate(sql3);
+					System.out.println("> 반납이 완료되었습니다.");
+					st2.close();
+
+				}catch(SQLException e) {
+					System.out.println(e.getMessage());
+				} 		
+			}
+		}catch(SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		DBConnection.disConnection();
+	}
+}
